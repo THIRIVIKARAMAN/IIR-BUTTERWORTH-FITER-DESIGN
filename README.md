@@ -1,104 +1,154 @@
-# EXP 3 : IIR-BUTTERWORTH-FITER-DESIGN
+# EXP 3 (A) : IIR BUTTERWORTH FITER DESIGN
 
 ## AIM: 
-
- To design an IIR Butterworth filter  using SCILAB. 
+ To design an IIR Butterworth filter using bilinear transformation in SCILAB. 
 
 ## APPARATUS REQUIRED: 
 PC installed with SCILAB. 
 
-## PROGRAM (LPF): 
-    clc ;  
-    close ;  
-    wp=input('Enter the pass band frequency (Radians )= ' );  
-    ws=input('Enter the stop band frequency (Radians )= ' );  
-    alphap=input( ' Enter the pass band attenuation (dB)=' );  
-    alphas=input( ' Enter the stop band attenuation(dB)=' );  
-    T=input('Enter the Value of sampling Time=');  
-    omegap=(2/T)*tan(wp/2);  
-    disp(omegap,'omegap=');  
-    omegas=(2/T)*tan(ws/2);  
-    disp(omegas,'omegas=');    
-    N=log10(((10^(0.1*alphas))-1)/((10^(0.1*alphap))-1))/(2*log10(omegas/omegap));  
-    disp(N,'N='); 
-    N=ceil(N);  
-    disp(N,'Round off value of N=');  
-    omegac=omegap/(((10^(0.1*alphap)) -1)^(1/(2* N)));  
-    disp(omegac,'omegac=');  
-    disp('Normalised Analog LPF Transfer function H(S)=');  
-    hs_Normalised = analpf(N,'butt',[0,0],1);  
-    disp(hs_Normalised);  
-    disp('Analog LPF Transfer function H(S)=');  
-    hs= analpf(N,'butt',[0,0],omegac);  
-    disp(hs);  
-    z=poly(0,'z'); 
-    Hz=horner(hs,(2/ T)*((z -1)/(z+1))) 
-    disp('Digital LPF Transfer function H(Z)=');  
-    disp(Hz);  
-    HW=frmag(Hz,512);  
-    w=0:%pi/511:%pi ;  
-    plot(w/%pi,abs(HW));  
-    xlabel(' Normalized Digital Frequency w');  
-    ylabel('Magnitude '); 
-    title(' Frequency Response of Butterworth IIR LPF');
-    
-    //CONSOLE WINDOW:
-    //Enter the pass band frequency (Radians )= 0.2*%pi
-    //Enter the stop band frequency (Radians )= 0.6*%pi 
-    //Enter the pass band attenuation (dB)=2
-    //Enter the stop band attenuation(dB)=14
-    //Enter the Value of sampling Time=1
+## PROGRAM 
+### LOW PASS FILTER
+```python
+clc;
+clear;
+close;
+
+// INPUTS
+wp = input('Pass band digital frequency (Radians)= ');
+ws = input('Stop band digital frequency (Radians)= ');
+
+// Linear gains
+Ap = input('Pass band gain (Linear)= ');
+As = input('Stop band gain (Linear)= ');
+T = input('Sampling Time= ');
+
+// PREWARPING
+omegap = (2/T)*tan(wp/2);
+omegas = (2/T)*tan(ws/2);
+
+disp("Prewarped omega p = " + string(omegap));
+disp("Prewarped omega s = " + string(omegas));
+
+// ORDER
+N = (1/2) * log10(((1/(As^2))-1)/((1/(Ap^2))-1)) / log10(omegas/omegap);
+disp("Calculated Order N = " + string(N));
+
+N = ceil(N);
+disp("Rounded Order N = " + string(N));
+
+// CUTOFF
+omegac = omegas / (((1/(As^2))-1)^(1/(2*N)));
+disp("Cutoff frequency omega c = " + string(omegac));
+
+// NORMALIZED ANALOG FILTER
+
+Hs_norm = analpf(N, 'butt', [0,0], 1);
+disp("Normalized Analog Transfer Function Hn(s) = ");
+disp(Hs_norm);
 
 
-## PROGRAM (HPF): 
-    // Clear Environment
-    clear;
-    clc;
-    close;
-    
-    // Filter Specifications (example values)
-    wp = 0.2*%pi;      // Passband frequency in radians
-    ws = 0.6*%pi;      // Stopband frequency in radians
-    alphap = 2;      // Passband attenuation in dB
-    alphas = 14;     // Stopband attenuation in dB
-    T = 1;           // Sampling time
-    
-    // Pre-warping analog frequencies
-    omegap = (2/T) * tan(wp/2);
-    omegas = (2/T) * tan(ws/2);
-    
-    // Calculate filter order
-    N = log10( ((10^(0.1*alphas))-1) / ((10^(0.1*alphap))-1) ) / (2*log10(omegas/omegap));
-    N = ceil(N);
-    
-    // Calculate cutoff frequency
-    omegac = omegap / ((10^(0.1*alphap)-1)^(1/(2*N)));
-    
-    // Design analog low pass Butterworth prototype
-    hs = analpf(N, 'butt', [0, 0], omegac);
-    
-    // Analog Highpass frequency transformation s -> omegac / s
-    s = poly(0, 's');
-    h_analog_hpf = horner(hs, omegac ./ s);
-    
-    // Convert the analog HPF to digital HPF using bilinear transformation
-    z = poly(0, 'z');
-    Hz = horner(h_analog_hpf, (2/T)*((z-1)./(z+1)));
-    
-    // Plot frequency response
-    Hw = frmag(Hz, 512);
-    w = 0:%pi/511:%pi;
-    plot(w/%pi, abs(Hw));
-    xlabel('Normalized Digital Frequency (×π rad/sample)');
-    ylabel('Magnitude');
-    title('Butterworth Highpass IIR Filter Frequency Response');
+// UNNORMALIZED ANALOG FILTER
+
+Hs = analpf(N, 'butt', [0,0], omegac);
+disp("Unnormalized Analog Transfer Function H(s) = ");
+disp(Hs);
 
 
-## OUTPUT (LPF) : 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d500194b-2c84-45cc-babc-ea93eee97820" />
+// BILINEAR TRANSFORMATION
 
-## OUTPUT (HPF) : 
-<img width="765" height="725" alt="image" src="https://github.com/user-attachments/assets/da6765c3-11da-4ee9-8a0a-5275ccb7f81c" />
+z = poly(0,'z');
+Hz = horner(Hs, (2/T)*((z-1)/(z+1)));
+
+disp("Digital Transfer Function H(z) = ");
+disp(Hz);
+
+
+// FREQUENCY RESPONSE
+HW = frmag(Hz,512);
+w = 0:%pi/511:%pi;
+
+plot(w/%pi, abs(HW));
+xlabel('Normalized Digital Frequency (w/pi)');
+ylabel('Magnitude');
+title('Frequency Response of Butterworth IIR LPF');
+
+```
+
+
+## PROGRAM
+### HIGH PASS FILTER
+```python
+clc;
+clear;
+close;
+
+// GIVEN SPECIFICATIONS
+T = 0.5;
+
+wp = 0.65*%pi;
+ws = 0.45*%pi;
+
+Gp = 0.707;
+Gs = 0.2;
+
+// PREWARPING (Bilinear Transformation)
+omegap = (2/T)*tan(wp/2);
+omegas = (2/T)*tan(ws/2);
+
+disp("Prewarped passband frequency = " + string(omegap));
+disp("Prewarped stopband frequency = " + string(omegas));
+
+// FILTER ORDER CALCULATION
+N_exact = (1/2)*log10(((1/(Gs^2))-1)/((1/(Gp^2))-1)) / log10(omegap/omegas);
+disp("Exact filter order = " + string(N_exact));
+
+N = ceil(N_exact);
+disp("Rounded filter order = " + string(N));
+
+// CUTOFF FREQUENCY
+omegac = omegap*((1/(Gp^2)-1)^(1/(2*N)));
+disp("Cutoff frequency = " + string(omegac));
+
+// ANALOG BUTTERWORTH LPF PROTOTYPE
+hs_lpf = analpf(N,"butt",[0,0],1);
+
+// LPF → HPF TRANSFORMATION
+s = poly(0,'s');
+hs_hpf = horner(hs_lpf, omegac/s);
+
+disp("Analog High Pass Transfer Function H(s)");
+disp(hs_hpf);
+
+// BILINEAR TRANSFORMATION
+z = poly(0,'z');
+Hz = horner(hs_hpf,(2/T)*((z-1)/(z+1)));
+
+disp("Digital High Pass Filter H(z)");
+disp(Hz);
+
+// FREQUENCY RESPONSE
+HW = frmag(Hz,512);
+w = 0:%pi/511:%pi;
+
+plot(w/%pi,abs(HW));
+xlabel("Normalized Frequency (w/pi)");
+ylabel("Magnitude");
+title("Frequency Response of Butterworth HPF");
+xgrid();
+
+```
+
+
+## OUTPUT 
+### LOW PASS FILTER 
+<img width="340" height="451" alt="image" src="https://github.com/user-attachments/assets/75a60249-8d8e-4f10-bb3b-a450ad3402b7" />
+
+<img width="351" height="492" alt="image" src="https://github.com/user-attachments/assets/10f3277c-2a4d-4bba-8649-d594111e4463" />
+
+### HIGH PASS FILTER
+<img width="295" height="406" alt="image" src="https://github.com/user-attachments/assets/bbaca645-a0b8-4d8c-abcd-44bcc0847a60" />
+
+<img width="345" height="493" alt="image" src="https://github.com/user-attachments/assets/51062bc8-25f6-4534-9e7b-f827b984617e" />
 
 ## RESULT: 
-The design of an IIR Butterworth filter using SCILAB is sucessfully completed.
+Thus , the IIR Butterworth filter was designed successfully using bilinear transformation in SCILAB.
